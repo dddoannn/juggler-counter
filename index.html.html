@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>最強ジャグラーカウンター</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #1a1a1a;
+            color: #eee;
+            text-align: center;
+            padding: 10px;
+            margin: 0;
+        }
+        h2 { color: #f1c40f; margin-bottom: 5px; }
+        
+        /* 機種セレクトボックス */
+        select {
+            font-size: 18px;
+            padding: 10px;
+            width: 100%;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            background: #333;
+            color: white;
+            border: 1px solid #555;
+        }
+
+        /* スペック表 */
+        .spec-table {
+            width: 100%;
+            font-size: 12px;
+            margin-bottom: 20px;
+            border-collapse: collapse;
+            background-color: #2c3e50;
+        }
+        .spec-table th, .spec-table td {
+            border: 1px solid #444;
+            padding: 6px;
+            text-align: center;
+        }
+        .spec-table th { background-color: #34495e; color: #ecf0f1; }
+        .high-setting { background-color: #c0392b; color: white; font-weight: bold; } /* 設定6を目立たせる */
+
+        /* 入力エリア */
+        .input-area {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            background: #333;
+            padding: 10px;
+            border-radius: 10px;
+        }
+        .input-group { width: 48%; }
+        .input-group label { display: block; font-size: 12px; margin-bottom: 5px; color: #aaa; }
+        input[type="number"] {
+            width: 90%;
+            padding: 8px;
+            font-size: 18px;
+            text-align: center;
+            border-radius: 5px;
+            border: none;
+        }
+
+        /* ボタンエリア */
+        .btn-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 15px 5px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+            position: relative;
+        }
+        button:active { transform: scale(0.98); }
+        
+        .btn-grape { background-color: #8e44ad; grid-column: 1 / 3; font-size: 20px; } /* ぶどうは大きく */
+        .btn-cherry { background-color: #c0392b; }
+        .btn-dup { background-color: #d35400; font-size: 14px; }
+        .btn-bonus { background-color: #2980b9; font-size: 14px; }
+        
+        .count-display {
+            display: block;
+            font-size: 24px;
+            margin-top: 5px;
+        }
+        .prob-display {
+            display: block;
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        /* 結果表示 */
+        .result-box {
+            background: #333;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: left;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .result-row { display: flex; justify-content: space-between; border-bottom: 1px solid #444; padding: 5px 0; }
+        .highlight { color: #f1c40f; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <h2>🤡 ジャグラー設定判別</h2>
+    
+    <select id="machineSelect" onchange="changeMachine()">
+        <option value="my5">SマイジャグラーV</option>
+        <option value="funky2">Sファンキージャグラー2</option>
+        <option value="im6">SアイムジャグラーEX(6号機)</option>
+        <option value="happy3">SハッピージャグラーV III</option>
+        <option value="gogo3">Sゴーゴージャグラー3</option>
+    </select>
+
+    <div id="specTableContainer"></div>
+
+    <div class="input-area">
+        <div class="input-group">
+            <label>打ち始め回転数</label>
+            <input type="number" id="startSpins" value="0" oninput="calc()">
+        </div>
+        <div class="input-group">
+            <label>現在の回転数</label>
+            <input type="number" id="currentSpins" placeholder="データ機の数字" oninput="calc()">
+        </div>
+    </div>
+
+    <div class="btn-container">
+        <button class="btn-grape" onclick="count('grape')">
+            🍇 ぶどう
+            <span class="count-display" id="cnt-grape">0</span>
+            <span class="prob-display" id="prob-grape">1 / -.--</span>
+        </button>
+
+        <button class="btn-cherry" onclick="count('cherry')">
+            🍒 チェリー(全)
+            <span class="count-display" id="cnt-cherry">0</span>
+            <span class="prob-display" id="prob-cherry">1 / -.--</span>
+        </button>
+
+        <button class="btn-dup" onclick="count('dup')">
+            🔥 重複チェリー<br>
+            <span class="count-display" id="cnt-dup">0</span>
+        </button>
+        
+        <div style="grid-column: 1 / 3; display:flex; gap:10px; margin-top:10px;">
+             <div style="flex:1">
+                 <label style="font-size:12px; color:#aaa;">BB回数</label>
+                 <input type="number" id="bb-count" value="0" style="width:100%;" oninput="calc()">
+             </div>
+             <div style="flex:1">
+                 <label style="font-size:12px; color:#aaa;">RB回数</label>
+                 <input type="number" id="rb-count" value="0" style="width:100%;" oninput="calc()">
+             </div>
+        </div>
+    </div>
+
+    <div class="result-box">
+        <div class="result-row"><span>個人回転数</span> <span id="my-spins" class="highlight">0 G</span></div>
+        <div class="result-row"><span>ぶどう確率</span> <span id="res-grape">1 / -.--</span></div>
+        <div class="result-row"><span>チェリー確率</span> <span id="res-cherry">1 / -.--</span></div>
+        <div class="result-row"><span>合算確率</span> <span id="res-total">1 / -.--</span></div>
+        <div style="margin-top:10px; font-size:12px; color:#aaa;">※チェリー重複はカウントのみで、確率は全チェリーで計算しています。重複確率は機種ごとに解析を確認してください。</div>
+    </div>
+
+    <script>
+        // 機種データ（実戦値含む目安）
+        const machines = {
+            "my5": {
+                name: "マイジャグラーV",
+                table: `<tr><th>設定</th><th>BB</th><th>RB</th><th>合算</th><th>ぶどう</th><th>チェリー</th></tr>
+                        <tr><td>1</td><td>1/273</td><td>1/409</td><td>1/163</td><td>1/5.90</td><td>1/36.0</td></tr>
+                        <tr><td>2</td><td>1/270</td><td>1/385</td><td>1/159</td><td>1/5.85</td><td>1/35.9</td></tr>
+                        <tr><td>3</td><td>1/266</td><td>1/336</td><td>1/148</td><td>1/5.80</td><td>1/35.8</td></tr>
+                        <tr><td>4</td><td>1/254</td><td>1/290</td><td>1/135</td><td>1/5.75</td><td>1/35.7</td></tr>
+                        <tr><td>5</td><td>1/240</td><td>1/240</td><td>1/120</td><td>1/5.70</td><td>1/35.6</td></tr>
+                        <tr class="high-setting"><td>6</td><td>1/229</td><td>1/229</td><td>1/114</td><td>1/5.66</td><td>1/35.5</td></tr>`
+            },
+            "funky2": {
+                name: "ファンキージャグラー2",
+                table: `<tr><th>設定</th><th>BB</th><th>RB</th><th>合算</th><th>ぶどう</th><th>チェリー</th></tr>
+                        <tr><td>1</td><td>1/266</td><td>1/439</td><td>1/165</td><td>1/5.80</td><td>1/37.0</td></tr>
+                        <tr><td>2</td><td>1/259</td><td>1/407</td><td>1/158</td><td>1/5.75</td><td>1/36.8</td></tr>
+                        <tr><td>3</td><td>1/256</td><td>1/366</td><td>1/150</td><td>1/5.70</td><td>1/36.6</td></tr>
+                        <tr><td>4</td><td>1/249</td><td>1/322</td><td>1/140</td><td>1/5.65</td><td>1/36.4</td></tr>
+                        <tr><td>5</td><td>1/240</td><td>1/299</td><td>1/133</td><td>1/5.60</td><td>1/36.2</td></tr>
+                        <tr class="high-setting"><td>6</td><td>1/219</td><td>1/262</td><td>1/119</td><td>1/5.60</td><td>1/36.0</td></tr>`
+            },
+            "im6": {
+                name: "アイムジャグラーEX(6号機)",
+                table: `<tr><th>設定</th><th>BB</th><th>RB</th><th>合算</th><th>ぶどう</th><th>チェリー</th></tr>
+                        <tr><td>1</td><td>1/273</td><td>1/439</td><td>1/168</td><td>1/6.02</td><td>1/37.0</td></tr>
+                        <tr><td>2</td><td>1/269</td><td>1/399</td><td>1/161</td><td>1/5.98</td><td>1/37.0</td></tr>
+                        <tr><td>3</td><td>1/269</td><td>1/331</td><td>1/148</td><td>1/5.95</td><td>1/37.0</td></tr>
+                        <tr><td>4</td><td>1/259</td><td>1/315</td><td>1/142</td><td>1/5.90</td><td>1/37.0</td></tr>
+                        <tr><td>5</td><td>1/259</td><td>1/255</td><td>1/128</td><td>1/5.85</td><td>1/36.5</td></tr>
+                        <tr class="high-setting"><td>6</td><td>1/255</td><td>1/255</td><td>1/127</td><td>1/5.78</td><td>1/36.0</td></tr>`
+            },
+            "happy3": {
+                name: "ハッピージャグラーV III",
+                table: `<tr><th>設定</th><th>BB</th><th>RB</th><th>合算</th><th>ぶどう</th><th>チェリー</th></tr>
+                        <tr><td>1</td><td>1/273</td><td>1/397</td><td>1/162</td><td>1/6.05</td><td>1/37.0</td></tr>
+                        <tr><td>2</td><td>1/270</td><td>1/362</td><td>1/154</td><td>1/6.00</td><td>1/37.0</td></tr>
+                        <tr><td>3</td><td>1/263</td><td>1/332</td><td>1/146</td><td>1/5.95</td><td>1/37.0</td></tr>
+                        <tr><td>4</td><td>1/254</td><td>1/297</td><td>1/137</td><td>1/5.85</td><td>1/36.0</td></tr>
+                        <tr><td>5</td><td>1/239</td><td>1/270</td><td>1/127</td><td>1/5.80</td><td>1/36.0</td></tr>
+                        <tr class="high-setting"><td>6</td><td>1/226</td><td>1/256</td><td>1/120</td><td>1/5.70</td><td>1/36.0</td></tr>`
+            },
+            "gogo3": {
+                name: "ゴーゴージャグラー3",
+                table: `<tr><th>設定</th><th>BB</th><th>RB</th><th>合算</th><th>ぶどう</th><th>チェリー</th></tr>
+                        <tr><td>1</td><td>1/259</td><td>1/354</td><td>1/149</td><td>1/6.25</td><td>1/35.0</td></tr>
+                        <tr><td>2</td><td>1/258</td><td>1/332</td><td>1/145</td><td>1/6.20</td><td>1/35.0</td></tr>
+                        <tr><td>3</td><td>1/258</td><td>1/306</td><td>1/140</td><td>1/6.15</td><td>1/35.0</td></tr>
+                        <tr><td>4</td><td>1/254</td><td>1/268</td><td>1/130</td><td>1/6.10</td><td>1/35.0</td></tr>
+                        <tr><td>5</td><td>1/247</td><td>1/255</td><td>1/125</td><td>1/6.05</td><td>1/35.0</td></tr>
+                        <tr class="high-setting"><td>6</td><td>1/234</td><td>1/234</td><td>1/117</td><td>1/5.90</td><td>1/35.0</td></tr>`
+            }
+        };
+
+        // 変数初期化
+        let counts = { grape: 0, cherry: 0, dup: 0 };
+
+        // ページ読み込み時
+        window.onload = function() {
+            changeMachine(); // 初期表示
+        };
+
+        // 機種変更処理
+        function changeMachine() {
+            let key = document.getElementById("machineSelect").value;
+            let data = machines[key];
+            
+            // テーブル更新
+            let tableHTML = `<table class="spec-table"><caption>${data.name} スペック表</caption>` + data.table + `</table>`;
+            document.getElementById("specTableContainer").innerHTML = tableHTML;
+        }
+
+        // カウント処理
+        function count(type) {
+            counts[type]++;
+            document.getElementById(`cnt-${type}`).innerText = counts[type];
+            
+            // もし「重複チェリー」が押されたら、普通のチェリーも1足す（重複＝チェリー成立してるから）
+            if (type === 'dup') {
+                counts['cherry']++;
+                document.getElementById('cnt-cherry').innerText = counts['cherry'];
+            }
+
+            calc();
+        }
+
+        // 計算処理
+        function calc() {
+            let start = parseInt(document.getElementById('startSpins').value) || 0;
+            let current = parseInt(document.getElementById('currentSpins').value) || 0;
+            let mySpins = current - start;
+
+            // 回転数がマイナスなら0にする
+            if (mySpins < 0) mySpins = 0;
+
+            document.getElementById('my-spins').innerText = mySpins + " G";
+
+            // ぶどう確率
+            if (counts.grape > 0 && mySpins > 0) {
+                let p = (mySpins / counts.grape).toFixed(2);
+                document.getElementById('prob-grape').innerText = "1 / " + p;
+                document.getElementById('res-grape').innerText = "1 / " + p;
+            }
+
+            // チェリー確率
+            if (counts.cherry > 0 && mySpins > 0) {
+                let p = (mySpins / counts.cherry).toFixed(2);
+                document.getElementById('prob-cherry').innerText = "1 / " + p;
+                document.getElementById('res-cherry').innerText = "1 / " + p;
+            }
+
+            // ボーナス合算
+            let bb = parseInt(document.getElementById('bb-count').value) || 0;
+            let rb = parseInt(document.getElementById('rb-count').value) || 0;
+            let totalBonus = bb + rb;
+            
+            if (totalBonus > 0 && current > 0) { // 合算は総回転数で見る
+                let p = (current / totalBonus).toFixed(0);
+                document.getElementById('res-total').innerText = "1 / " + p;
+            }
+        }
+    </script>
+</body>
+</html>
